@@ -1,6 +1,14 @@
 'use server';
 
+import data from '../../public/data.json';
+
 export async function getParts(vehicleId: string) {
+    // Check if we're using hardcoded data by checking an environment variable. If does not exist, use hardcoded data.
+    if (process.env.LIVE_DATA !== 'true') {
+        // Return data.json from the public directory
+        return data;
+    }
+
     const response = await fetch('https://api.dev2.partly.pro/api/v1/assemblies.v2.search', {
         method: 'POST',
         headers: {
