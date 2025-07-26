@@ -1,0 +1,115 @@
+[
+  {
+    "name": "Engine Bay",
+    "image": "images/engine_bay.jpg",
+    "parts": [
+      {
+        "name": "Engine",
+        "image": "images/engine.jpg",
+        "parts": [
+          {
+            "name": "Cylinder Head",
+            "image": "images/cylinder_head.jpg",
+            "parts": []
+          },
+          {
+            "name": "Crankshaft",
+            "image": "images/crankshaft.jpg",
+            "parts": []
+          }
+        ]
+      },
+      {
+        "name": "Radiator",
+        "image": "images/radiator.jpg",
+        "parts": []
+      },
+      {
+        "name": "Battery",
+        "image": "images/battery.jpg",
+        "parts": []
+      }
+    ]
+  },
+  {
+    "name": "Interior",
+    "image": "images/interior.jpg",
+    "parts": [
+      {
+        "name": "Dashboard",
+        "image": "images/dashboard.jpg",
+        "parts": [
+          {
+            "name": "Instrument Cluster",
+            "image": "images/instrument_cluster.jpg",
+            "parts": []
+          },
+          {
+            "name": "Air Vents",
+            "image": "images/air_vents.jpg",
+            "parts": []
+          }
+        ]
+      },
+      {
+        "name": "Seats",
+        "image": "images/seats.jpg",
+        "parts": [
+          {
+            "name": "Seat Cushion",
+            "image": "images/seat_cushion.jpg",
+            "parts": []
+          },
+          {
+            "name": "Headrest",
+            "image": "images/headrest.jpg",
+            "parts": []
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "Suspension",
+    "image": "images/suspension.jpg",
+    "parts": [
+      {
+        "name": "Shock Absorber",
+        "image": "images/shock_absorber.jpg",
+        "parts": []
+      },
+      {
+        "name": "Control Arm",
+        "image": "images/control_arm.jpg",
+        "parts": []
+      }
+    ]
+  },
+  {
+    "name": "Exterior",
+    "image": "images/exterior.jpg",
+    "parts": [
+      {
+        "name": "Front Bumper",
+        "image": "images/front_bumper.jpg",
+        "parts": []
+      },
+      {
+        "name": "Headlight Assembly",
+        "image": "images/headlight.jpg",
+        "parts": [
+          {
+            "name": "Bulb",
+            "image": "images/bulb.jpg",
+            "parts": []
+          },
+          {
+            "name": "Lens Cover",
+            "image": "images/lens_cover.jpg",
+            "parts": []
+          }
+        ]
+      }
+    ]
+  }
+]
