@@ -8,7 +8,7 @@ export async function getParts(vehicleId: string) {
             'Authorization': `Bearer ${process.env.API_KEY}`,
         },
         body: JSON.stringify({
-        "oem_vehicle_id": vehicleId
+            "oem_vehicle_id": vehicleId
         }),
     });
 
