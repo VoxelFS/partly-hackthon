@@ -1,9 +1,13 @@
 import Image from "next/image";
+import {getParts} from "@/actions/getParts";
 import {getVehicle} from "@/actions/getVehicle";
 
 export default async function Home() {
   const data = await getVehicle("KNW86");
   console.log(data);
+
+  const parts = await getParts(data.id);
+  console.log(parts);
 
   return (
     <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
