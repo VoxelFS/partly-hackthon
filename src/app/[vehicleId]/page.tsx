@@ -8,6 +8,7 @@ interface Part {
   name: string;
   image: string;
   parts: Part[];
+  grade?: string | null;  // Add grade field for analysis data
 }
 
 interface PartWithCheckState extends Part {
@@ -36,7 +37,7 @@ export default function NestedChecklistPage() {
   const [loading, setLoading] = useState(true);
   const [selectedImage, setSelectedImage] = useState<{src: string, alt: string} | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
-  const [analysis, setAnalysis] = useState<string | null>(null);
+  const [analysis, setAnalysis] = useState<Part[] | null>(null);
 
   useEffect(() => {
     const loadData = async () => {
@@ -57,6 +58,13 @@ export default function NestedChecklistPage() {
 
     loadData();
   }, []);
+
+  // Auto-apply analysis when analysis data changes
+  useEffect(() => {
+    if (analysis) {
+      applyAnalysisData(analysis);
+    }
+  }, [analysis]);
 
   // Handle checkbox toggle
   const handleToggle = (targetId: string) => {
@@ -120,6 +128,15 @@ export default function NestedChecklistPage() {
     }, 0);
   };
 
+  // Count items with quality grades (auto-populated)
+  const countItemsWithQuality = (parts: PartWithCheckState[]): number => {
+    return parts.reduce((count, part) => {
+      const currentCount = part.quality ? 1 : 0;
+      const childCount = countItemsWithQuality(part.parts);
+      return count + currentCount + childCount;
+    }, 0);
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-screen">
@@ -133,6 +150,7 @@ export default function NestedChecklistPage() {
 
   const totalItems = countTotalItems(parts);
   const checkedItems = countCheckedItems(parts);
+  const qualityItems = countItemsWithQuality(parts);
 
   // Function to open image modal
   const openImageModal = (imageSrc: string, imageAlt: string) => {
@@ -144,15 +162,111 @@ export default function NestedChecklistPage() {
     setSelectedImage(null);
   };
 
+  // Function to apply analysis data to parts
+  const applyAnalysisData = (analysisData: Part[]) => {
+    const applyGradesToParts = (parts: PartWithCheckState[], analysisPartsList: Part[]): PartWithCheckState[] => {
+      return parts.map(part => {
+        // Find matching part in analysis data by name
+        const analysisPart = analysisPartsList.find(ap => ap.name === part.name);
+        
+        if (analysisPart) {
+          // Map grade to quality and set checked state
+          let quality: 'As new' | 'A' | 'B' | 'C' | undefined;
+          let isChecked = false;
+          
+          if (analysisPart.grade) {
+            switch (analysisPart.grade) {
+              case 'As new':
+                quality = 'As new';
+                isChecked = true;
+                break;
+              case 'A':
+                quality = 'A';
+                isChecked = true;
+                break;
+              case 'B':
+                quality = 'B';
+                isChecked = true;
+                break;
+              case 'C':
+                quality = 'C';
+                isChecked = true;
+                break;
+              default:
+                quality = undefined;
+                isChecked = false;
+            }
+          }
+          
+          return {
+            ...part,
+            quality,
+            isChecked,
+            // Recursively apply to child parts
+            parts: applyGradesToParts(part.parts, analysisPart.parts || [])
+          };
+        }
+        
+        // If no matching analysis part, recursively check children
+        return {
+          ...part,
+          parts: applyGradesToParts(part.parts, analysisPartsList)
+        };
+      });
+    };
+
+    setParts(prevParts => applyGradesToParts(prevParts, analysisData));
+  };
+
+  // Function to reset all selections
+  const resetSelections = () => {
+    const resetPartsRecursively = (parts: PartWithCheckState[]): PartWithCheckState[] => {
+      return parts.map(part => ({
+        ...part,
+        isChecked: false,
+        quality: undefined,
+        parts: resetPartsRecursively(part.parts)
+      }));
+    };
+    
+    setParts(prevParts => resetPartsRecursively(prevParts));
+    setAnalysis(null);
+  };
+
   return (
       <div className="bg-gray-50 p-4 sm:p-6 lg:p-8 min-h-screen">
-        <UploadModal isOpen={modalOpen} onClose={() => setModalOpen(false)} setAnalysis={setAnalysis} />
+        <UploadModal 
+          isOpen={modalOpen} 
+          onClose={() => setModalOpen(false)} 
+          setAnalysis={setAnalysis} 
+        />
         <button
             onClick={() => setModalOpen(true)}
-            className="px-4 py-2 bg-blue-700 text-white rounded hover:cursor-pointer absolute right-3"
+            className="top-3 right-3 absolute bg-blue-700 px-4 py-2 rounded text-white hover:cursor-pointer"
         >
           Upload Image
         </button>
+        
+        {/* Analysis Status and Reset */}
+        {analysis && (
+          <div className="top-16 right-3 absolute bg-green-100 px-3 py-2 border border-green-400 rounded text-green-700 text-sm">
+            <div className="flex items-center gap-2">
+              <span>✓ Analysis Available</span>
+              <button
+                onClick={() => applyAnalysisData(analysis)}
+                className="bg-blue-500 hover:bg-blue-600 px-2 py-1 rounded text-white text-xs"
+              >
+                Re-apply
+              </button>
+              <button
+                onClick={resetSelections}
+                className="bg-red-500 hover:bg-red-600 px-2 py-1 rounded text-white text-xs"
+              >
+                Reset
+              </button>
+            </div>
+          </div>
+        )}
         <div className="mx-auto max-w-4xl">
           {/* Header */}
           <div className="bg-white shadow-md mb-6 p-6 rounded-lg">
@@ -166,12 +280,17 @@ export default function NestedChecklistPage() {
             {/* Summary */}
             <div className="bg-gray-50 p-4 rounded-lg">
               <div className="flex justify-between items-center text-sm">
-              <span className="text-gray-600">
-                Total Items: <span className="font-semibold">{totalItems}</span>
-              </span>
                 <span className="text-gray-600">
-                Checked: <span className="font-semibold text-green-600">{checkedItems}</span>
-              </span>
+                  Total Items: <span className="font-semibold">{totalItems}</span>
+                </span>
+                <span className="text-gray-600">
+                  Checked: <span className="font-semibold text-green-600">{checkedItems}</span>
+                </span>
+                {qualityItems > 0 && (
+                  <span className="text-gray-600">
+                    Auto-filled: <span className="font-semibold text-blue-600">{qualityItems}</span>
+                  </span>
+                )}
               </div>
             </div>
           </div>

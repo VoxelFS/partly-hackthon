@@ -41,21 +41,25 @@ export default function UploadModal({ isOpen, onClose, setAnalysis }: UploadModa
             .trim();
         const partsData = JSON.parse(cleanedJson);
         setAnalysis(partsData);
+        console.log(partsData)
         setUploading(false);
+        
+        // Auto-close modal after successful analysis
+        onClose();
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
-            <div className="relative bg-white rounded-lg shadow-lg w-full max-w-xl p-6">
+        <div className="z-50 fixed inset-0 flex justify-center items-center">
+            <div className="relative bg-white shadow-lg p-6 rounded-lg w-full max-w-xl">
                 <button
-                    className="absolute top-2 right-2 text-gray-500 hover:text-gray-800"
+                    className="top-2 right-2 absolute text-gray-500 hover:text-gray-800"
                     onClick={onClose}
                     aria-label="Close"
                 >
                     ✕
                 </button>
 
-                <h1 className="text-xl font-bold mb-4 text-black">Upload & Analyze Image</h1>
+                <h1 className="mb-4 font-bold text-black text-xl">Upload & Analyze Image</h1>
 
                 <form onSubmit={handleUpload} className="text-black">
                     <input
@@ -67,7 +71,7 @@ export default function UploadModal({ isOpen, onClose, setAnalysis }: UploadModa
                     />
                     <button
                         type="submit"
-                        className="mt-4 px-4 py-2 bg-blue-600 text-white rounded"
+                        className="bg-blue-600 mt-4 px-4 py-2 rounded text-white"
                         disabled={uploading}
                     >
                         {uploading ? 'Uploading...' : 'Upload'}
@@ -75,7 +79,7 @@ export default function UploadModal({ isOpen, onClose, setAnalysis }: UploadModa
                 </form>
 
                 {preview && (
-                    <div className="mt-6 relative w-full aspect-video rounded overflow-hidden shadow">
+                    <div className="relative shadow mt-6 rounded w-full aspect-video overflow-hidden">
                         <Image
                             src={preview}
                             alt="Preview"
