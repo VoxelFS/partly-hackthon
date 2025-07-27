@@ -136,7 +136,7 @@ export default function SearchBar() {
 
             {/* Checklist Button Inside Card */}
             <div className="flex justify-end pt-4">
-              <Link href="/" passHref>
+              <Link href={`/${input}`} passHref>
                 <button
                   className="bg-white text-sm text-gray-800 font-medium border border-gray-300 rounded-lg px-4 py-2 shadow-sm transition duration-150 ease-in-out hover:bg-gray-100 hover:shadow-md hover:scale-[1.02] dark:bg-white dark:text-black"
                 >
