@@ -29,13 +29,20 @@ export default function SearchBar() {
   const handleSearch = async () => {
     const cleaned = input.trim().toUpperCase();
     if (!cleaned) {
-      setError("Please enter a plate.");
+      setError("Please enter a license plate.");
+      return;
+    }
+
+    const isValidPlate = /^[A-Z0-9]{1,6}$/.test(cleaned);
+    if (!isValidPlate) {
+      setError("Invalid plate format. Use letters/numbers only (max 6 characters).");
       return;
     }
 
     setLoading(true);
     setError("");
     setShowCard(false);
+    setResults([]);
 
     try {
       const data = await getVehicle(cleaned);
@@ -56,10 +63,15 @@ export default function SearchBar() {
         }
       });
 
+      if (formatted.length === 0) {
+        setError("No relevant vehicle details found.");
+        return;
+      }
+
       setResults(formatted);
       setShowCard(true);
     } catch (err) {
-      setError("Vehicle lookup failed.");
+      setError("Vehicle lookup failed. Please try again.");
       console.error(err);
     } finally {
       setLoading(false);
@@ -84,7 +96,7 @@ export default function SearchBar() {
           <input
             type="text"
             value={input}
-            onChange={(e) => setInput(e.target.value)}
+            onChange={(e) => setInput(e.target.value.toUpperCase())}
             onKeyDown={handleKeyDown}
             placeholder="Enter Number Plate..."
             className="flex-1 rounded-lg border border-gray-300 px-5 py-3 text-base focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-zinc-800 dark:text-white dark:border-gray-600"
@@ -124,7 +136,7 @@ export default function SearchBar() {
 
             {/* Checklist Button Inside Card */}
             <div className="flex justify-end pt-4">
-              <Link href="/" passHref>
+              <Link href={`/${input}`} passHref>
                 <button
                   className="bg-white text-sm text-gray-800 font-medium border border-gray-300 rounded-lg px-4 py-2 shadow-sm transition duration-150 ease-in-out hover:bg-gray-100 hover:shadow-md hover:scale-[1.02] dark:bg-white dark:text-black"
                 >
