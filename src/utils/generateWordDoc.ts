@@ -1,5 +1,23 @@
 import { Document, Packer, Paragraph, TextRun, HeadingLevel, BorderStyle } from 'docx';
 import type { PartWithCheckState } from '../app/[vehicleId]/page';
+import { get } from 'http';
+import { getVehicle } from '@/actions/getVehicle';
+
+interface VehicleProperty {
+  [key: string]: string;
+}
+
+interface VehicleVariant {
+  id: string;
+  properties: VehicleProperty[];
+  uvdb_property_ids: string[];
+}
+
+interface VehicleInfo {
+  uvdb_vehicle_definitions: any[];
+  chassis_number: string;
+  variants: VehicleVariant[];
+}
 
 const generatePartContent = (part: PartWithCheckState, level: number = 0): Paragraph[] => {
   const paragraphs: Paragraph[] = [];
@@ -39,7 +57,10 @@ const generatePartContent = (part: PartWithCheckState, level: number = 0): Parag
   return paragraphs;
 };
 
-export const generateWordDocument = async (parts: PartWithCheckState[]): Promise<Blob> => {
+export const generateWordDocument = async (parts: PartWithCheckState[], licensePlate: string): Promise<Blob> => {
+
+  const vehicleInfo: VehicleInfo = await getVehicle(licensePlate);
+
   const doc = new Document({
     sections: [
       {
@@ -48,7 +69,57 @@ export const generateWordDocument = async (parts: PartWithCheckState[]): Promise
           new Paragraph({
             heading: HeadingLevel.HEADING_1,
             text: "Parts Inspection Checklist",
-            spacing: { after: 400 },
+            spacing: { after: 200 },
+          }),
+          // Vehicle Information Section
+          new Paragraph({
+            spacing: { before: 200, after: 200 },
+            children: [
+              new TextRun({
+                text: "Vehicle Details",
+                bold: true,
+                size: 28,
+                break: 1
+              }),
+              new TextRun({
+                text: `License Plate: ${licensePlate.toUpperCase()}`,
+                size: 24,
+                break: 1
+              }),
+              new TextRun({
+                text: `Make: ${vehicleInfo.variants[0].properties.find((p: VehicleProperty) => 'make' in p)?.['make']?.toUpperCase() || 'N/A'}`,
+                size: 24,
+                break: 1
+              }),
+              new TextRun({
+                text: `Model: ${vehicleInfo.variants[0].properties.find((p: VehicleProperty) => 'model' in p)?.['model'] || 'N/A'}`,
+                size: 24,
+                break: 1
+              }),
+              new TextRun({
+                text: `Year: ${vehicleInfo.variants[0].properties.find((p: VehicleProperty) => 'production_year' in p)?.['production_year'] || 'N/A'}`,
+                size: 24,
+                break: 1
+              }),
+              new TextRun({
+                text: `Body Type: ${vehicleInfo.variants[0].properties.find((p: VehicleProperty) => 'body_type' in p)?.['body_type'] || 'N/A'}`,
+                size: 24,
+                break: 1
+              }),
+              new TextRun({
+                text: `Engine: ${vehicleInfo.variants[0].properties.find((p: VehicleProperty) => 'engine' in p)?.['engine'] || 'N/A'}`,
+                size: 24,
+                break: 1
+              }),
+              new TextRun({
+                text: `Chassis Number: ${vehicleInfo.chassis_number}`,
+                size: 24,
+                break: 1
+              }),
+            ],
+            border: {
+              bottom: { style: BorderStyle.SINGLE, size: 1, color: "999999" },
+            },
           }),
           ...parts.flatMap((part) => generatePartContent(part)),
           new Paragraph({
