@@ -3,29 +3,38 @@ import SearchBar from "@/app/components/search-bar";
 
 export default function Home() {
   return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
+    <div className="min-h-screen font-sans bg-gray-100 dark:bg-zinc-950 text-gray-800 dark:text-white flex flex-col items-center px-6 sm:px-12 py-12 gap-16">
+      
+      {/* Page Header */}
+      <header className="w-full max-w-2xl text-center">
+        <h1 className="text-4xl font-bold mb-2 tracking-tight">
+          Vehicle Part Valuation
+        </h1>
+        <p className="text-base text-gray-600 dark:text-gray-300">
+          Quickly search vehicles by license plate and identify key part data.
+        </p>
+      </header>
 
-        {/* 🔍 Custom SearchBar for chassis/plate lookup */}
-        <SearchBar />
+      {/* SearchBar Component */}
+      <SearchBar />
 
-        {/* Remove below if not needed, or keep as placeholder info */}
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+      {/* Optional Info Section or Placeholder */}
+      <section className="w-full max-w-2xl text-sm text-gray-600 dark:text-gray-400">
+        <div className="border-t border-gray-200 dark:border-zinc-700 pt-6">
+          <p className="mb-1">
+            Tip: Try entering a real plate like{" "}
+            <code className="bg-gray-200 dark:bg-zinc-800 px-2 py-1 rounded">
+              KNW86
+            </code>.
+          </p>
+          <p className="text-xs text-gray-500 dark:text-zinc-500">
+            Your results will appear below the search bar.
+          </p>
+        </div>
+      </section>
 
-      </main>
-
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center text-sm text-gray-600 dark:text-gray-400">
+      {/* Footer */}
+      <footer className="mt-auto py-6 text-sm text-gray-500 dark:text-gray-400">
         <a
           href="https://nextjs.org"
           target="_blank"
