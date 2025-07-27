@@ -11,6 +11,7 @@ interface Part {
 interface PartWithCheckState extends Part {
   id: string;
   isChecked: boolean;
+  quality?: 'As new' | 'A' | 'B' | 'C';
   parts: PartWithCheckState[];
 }
 
@@ -22,6 +23,7 @@ const addIdsAndCheckState = (parts: Part[], parentId = ''): PartWithCheckState[]
       ...part,
       id,
       isChecked: false,
+      quality: undefined,
       parts: addIdsAndCheckState(part.parts, id)
     };
   });
@@ -60,7 +62,8 @@ export default function NestedChecklistPage() {
           return {
             ...part,
             isChecked: newCheckedState,
-            parts: setAllChildrenState(part.parts, newCheckedState)
+            // Clear quality if unchecking
+            quality: newCheckedState ? part.quality : undefined
           };
         }
         return {
@@ -73,13 +76,26 @@ export default function NestedChecklistPage() {
     setParts(prevParts => togglePartRecursively(prevParts));
   };
 
-  // Set all children to the same state as parent
-  const setAllChildrenState = (parts: PartWithCheckState[], state: boolean): PartWithCheckState[] => {
-    return parts.map(part => ({
-      ...part,
-      isChecked: state,
-      parts: setAllChildrenState(part.parts, state)
-    }));
+  // Handle quality selection
+  const handleQualityChange = (targetId: string, quality: 'As new' | 'A' | 'B' | 'C' | '') => {
+    const updatePartRecursively = (parts: PartWithCheckState[]): PartWithCheckState[] => {
+      return parts.map(part => {
+        if (part.id === targetId) {
+          return {
+            ...part,
+            quality: quality === '' ? undefined : quality,
+            // Auto-check the part when quality is selected, uncheck when cleared
+            isChecked: quality !== '' ? true : false
+          };
+        }
+        return {
+          ...part,
+          parts: updatePartRecursively(part.parts)
+        };
+      });
+    };
+
+    setParts(prevParts => updatePartRecursively(prevParts));
   };
 
   // Count total checked items
@@ -134,11 +150,6 @@ export default function NestedChecklistPage() {
               <span className="text-gray-600">
                 Checked: <span className="font-semibold text-green-600">{checkedItems}</span>
               </span>
-              <span className="text-gray-600">
-                Progress: <span className="font-semibold text-blue-600">
-                  {totalItems > 0 ? Math.round((checkedItems / totalItems) * 100) : 0}%
-                </span>
-              </span>
             </div>
           </div>
         </div>
@@ -158,6 +169,7 @@ export default function NestedChecklistPage() {
                   key={part.id}
                   part={part}
                   onToggle={handleToggle}
+                  onQualityChange={handleQualityChange}
                   level={0}
                 />
               ))}
@@ -173,10 +185,12 @@ export default function NestedChecklistPage() {
 function NestedChecklistItem({ 
   part, 
   onToggle, 
+  onQualityChange,
   level 
 }: { 
   part: PartWithCheckState; 
   onToggle: (id: string) => void; 
+  onQualityChange: (id: string, quality: 'As new' | 'A' | 'B' | 'C' | '') => void;
   level: number; 
 }) {
   const [isExpanded, setIsExpanded] = useState(true);
@@ -227,12 +241,49 @@ function NestedChecklistItem({
           {part.name}
         </label>
         
-        {/* Status Badge */}
-        {part.isChecked && (
-          <span className="inline-flex items-center bg-green-100 ml-2 px-2 py-0.5 rounded font-medium text-green-800 text-xs">
-            ✓
-          </span>
-        )}
+        {/* Quality Selection Buttons */}
+        <div className="flex gap-1 mr-2">
+          <button
+            onClick={() => onQualityChange(part.id, part.quality === 'As new' ? '' : 'As new')}
+            className={`px-2 py-1 text-xs rounded border transition-colors ${
+              part.quality === 'As new'
+                ? 'bg-green-500 text-white border-green-500'
+                : 'bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200'
+            }`}
+          >
+            As New
+          </button>
+          <button
+            onClick={() => onQualityChange(part.id, part.quality === 'A' ? '' : 'A')}
+            className={`px-2 py-1 text-xs rounded border transition-colors ${
+              part.quality === 'A'
+                ? 'bg-blue-500 text-white border-blue-500'
+                : 'bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200'
+            }`}
+          >
+            Grade A
+          </button>
+          <button
+            onClick={() => onQualityChange(part.id, part.quality === 'B' ? '' : 'B')}
+            className={`px-2 py-1 text-xs rounded border transition-colors ${
+              part.quality === 'B'
+                ? 'bg-yellow-500 text-white border-yellow-500'
+                : 'bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200'
+            }`}
+          >
+            Grade B
+          </button>
+          <button
+            onClick={() => onQualityChange(part.id, part.quality === 'C' ? '' : 'C')}
+            className={`px-2 py-1 text-xs rounded border transition-colors ${
+              part.quality === 'C'
+                ? 'bg-red-500 text-white border-red-500'
+                : 'bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200'
+            }`}
+          >
+            Grade C
+          </button>
+        </div>
       </div>
       
       {/* Nested Children */}
@@ -243,6 +294,7 @@ function NestedChecklistItem({
               key={childPart.id}
               part={childPart}
               onToggle={onToggle}
+              onQualityChange={onQualityChange}
               level={level + 1}
             />
           ))}
