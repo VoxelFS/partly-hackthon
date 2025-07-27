@@ -120,12 +120,6 @@ export default async function analyzeImageWithGemini(filePath: string) {
         config: { mimeType: "image/jpeg" },
     });
 
-    const jsonDirectory = path.join(process.cwd(), 'public');
-    const fPath = path.join(jsonDirectory, 'cleaned_data.json');
-
-    const fileContents = await fs.readFile(fPath, 'utf8');
-    const data = JSON.parse(fileContents);
-
     const result = await ai.models.generateContent({
         model: "gemini-2.5-flash",
         contents: createUserContent([
@@ -133,7 +127,6 @@ export default async function analyzeImageWithGemini(filePath: string) {
             prompt
         ]),
     });
-    console.log(result.text);
 
     return result.text;
 }

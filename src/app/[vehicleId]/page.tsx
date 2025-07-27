@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
+import UploadModal from "@/components/UploadModal";
 
 interface Part {
   name: string;
@@ -34,6 +35,8 @@ export default function NestedChecklistPage() {
   const [parts, setParts] = useState<PartWithCheckState[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedImage, setSelectedImage] = useState<{src: string, alt: string} | null>(null);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [analysis, setAnalysis] = useState<string | null>(null);
 
   useEffect(() => {
     const loadData = async () => {
@@ -142,92 +145,100 @@ export default function NestedChecklistPage() {
   };
 
   return (
-    <div className="bg-gray-50 p-4 sm:p-6 lg:p-8 min-h-screen">
-      <div className="mx-auto max-w-4xl">
-        {/* Header */}
-        <div className="bg-white shadow-md mb-6 p-6 rounded-lg">
-          <h1 className="mb-2 font-bold text-gray-900 text-3xl">
-            Vehicle Parts Checklist
-          </h1>
-          <p className="mb-4 text-gray-500 text-sm">
-            Check off salvageable parts from this vehicle. Items are organized hierarchically.
-          </p>
-          
-          {/* Summary */}
-          <div className="bg-gray-50 p-4 rounded-lg">
-            <div className="flex justify-between items-center text-sm">
+      <div className="bg-gray-50 p-4 sm:p-6 lg:p-8 min-h-screen">
+        <UploadModal isOpen={modalOpen} onClose={() => setModalOpen(false)} setAnalysis={setAnalysis} />
+        <button
+            onClick={() => setModalOpen(true)}
+            className="px-4 py-2 bg-blue-700 text-white rounded hover:cursor-pointer absolute right-3"
+        >
+          Upload Image
+        </button>
+        <div className="mx-auto max-w-4xl">
+          {/* Header */}
+          <div className="bg-white shadow-md mb-6 p-6 rounded-lg">
+            <h1 className="mb-2 font-bold text-gray-900 text-3xl">
+              Vehicle Parts Checklist
+            </h1>
+            <p className="mb-4 text-gray-500 text-sm">
+              Check off salvageable parts from this vehicle. Items are organized hierarchically.
+            </p>
+
+            {/* Summary */}
+            <div className="bg-gray-50 p-4 rounded-lg">
+              <div className="flex justify-between items-center text-sm">
               <span className="text-gray-600">
                 Total Items: <span className="font-semibold">{totalItems}</span>
               </span>
-              <span className="text-gray-600">
+                <span className="text-gray-600">
                 Checked: <span className="font-semibold text-green-600">{checkedItems}</span>
               </span>
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* Nested Checklist */}
-        <div className="bg-white shadow-md p-6 rounded-lg">
-          <h2 className="mb-4 font-semibold text-gray-900 text-xl">Parts Inventory</h2>
-          
-          {parts.length === 0 ? (
-            <div className="p-8 text-gray-500 text-center">
-              No parts data available.
-            </div>
-          ) : (
-            <div className="space-y-2">
-              {parts.map((part) => (
-                <NestedChecklistItem
-                  key={part.id}
-                  part={part}
-                  onToggle={handleToggle}
-                  onQualityChange={handleQualityChange}
-                  onImageClick={openImageModal}
-                  level={0}
-                />
-              ))}
-            </div>
+          {/* Nested Checklist */}
+          <div className="bg-white shadow-md p-6 rounded-lg">
+            <h2 className="mb-4 font-semibold text-gray-900 text-xl">Parts Inventory</h2>
+
+            {parts.length === 0 ? (
+                <div className="p-8 text-gray-500 text-center">
+                  No parts data available.
+                </div>
+            ) : (
+                <div className="space-y-2">
+                  {parts.map((part) => (
+                      <NestedChecklistItem
+                          key={part.id}
+                          part={part}
+                          onToggle={handleToggle}
+                          onQualityChange={handleQualityChange}
+                          onImageClick={openImageModal}
+                          level={0}
+                      />
+                  ))}
+                </div>
+            )}
+          </div>
+
+          {/* Image Modal */}
+          {selectedImage && (
+              <div
+                  className="z-50 fixed inset-0 flex justify-center items-center bg-black bg-opacity-75 p-4"
+                  onClick={closeImageModal}
+              >
+                <div className="relative max-w-full max-h-full">
+                  <button
+                      onClick={closeImageModal}
+                      className="top-4 right-4 z-10 absolute flex justify-center items-center bg-black bg-opacity-50 hover:bg-opacity-75 rounded-full w-8 h-8 text-white transition-colors"
+                  >
+                    ×
+                  </button>
+                  <Image
+                      src={selectedImage.src}
+                      alt={selectedImage.alt}
+                      width={800}
+                      height={600}
+                      className="rounded-lg max-w-full max-h-[90vh] object-contain"
+                      onClick={(e) => e.stopPropagation()}
+                  />
+                </div>
+              </div>
           )}
         </div>
 
-        {/* Image Modal */}
-        {selectedImage && (
-          <div 
-            className="z-50 fixed inset-0 flex justify-center items-center bg-black bg-opacity-75 p-4"
-            onClick={closeImageModal}
-          >
-            <div className="relative max-w-full max-h-full">
-              <button
-                onClick={closeImageModal}
-                className="top-4 right-4 z-10 absolute flex justify-center items-center bg-black bg-opacity-50 hover:bg-opacity-75 rounded-full w-8 h-8 text-white transition-colors"
-              >
-                ×
-              </button>
-              <Image
-                src={selectedImage.src}
-                alt={selectedImage.alt}
-                width={800}
-                height={600}
-                className="rounded-lg max-w-full max-h-[90vh] object-contain"
-                onClick={(e) => e.stopPropagation()}
-              />
-            </div>
-          </div>
-        )}
       </div>
-    </div>
   );
 }
 
 // Recursive component for nested checklist items
-function NestedChecklistItem({ 
-  part, 
-  onToggle, 
-  onQualityChange,
-  onImageClick,
-  level 
-}: { 
-  part: PartWithCheckState; 
+function NestedChecklistItem({
+                               part,
+                               onToggle,
+                               onQualityChange,
+                               onImageClick,
+                               level
+                             }: {
+  part: PartWithCheckState;
   onToggle: (id: string) => void; 
   onQualityChange: (id: string, quality: 'As new' | 'A' | 'B' | 'C' | '') => void;
   onImageClick: (imageSrc: string, imageAlt: string) => void;
