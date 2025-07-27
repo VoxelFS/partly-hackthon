@@ -31,7 +31,7 @@ export interface PartWithCheckState {
   name: string;
   image: string;
   isChecked: boolean;
-  quality?: 'As new' | 'A' | 'B' | 'C';
+  quality?: 'As new' | 'A' | 'B' | 'C' | 'Unsalvageable';
   parts: PartWithCheckState[];
 }
 
@@ -73,7 +73,7 @@ export default function NestedChecklistPage() {
   }, [analysis]);
 
   // Handle quality selection
-  const handleQualityChange = (targetId: string, quality: 'As new' | 'A' | 'B' | 'C' | '') => {
+  const handleQualityChange = (targetId: string, quality: 'As new' | 'A' | 'B' | 'C' | 'Unsalvageable' | '') => {
     const updatePartRecursively = (parts: PartWithCheckState[], parentIds: string[] = []): PartWithCheckState[] => {
       return parts.map(part => {
         if (part.id === targetId) {
@@ -194,7 +194,7 @@ export default function NestedChecklistPage() {
         
         if (analysisPart) {
           // Map grade to quality and set checked state
-          let quality: 'As new' | 'A' | 'B' | 'C' | undefined;
+          let quality: 'As new' | 'A' | 'B' | 'C' | 'Unsalvageable' | undefined;
           let isChecked = false;
           
           if (analysisPart.grade) {
@@ -213,6 +213,10 @@ export default function NestedChecklistPage() {
                 break;
               case 'C':
                 quality = 'C';
+                isChecked = true;
+                break;
+              case 'Unsalvageable':
+                quality = 'Unsalvageable';
                 isChecked = true;
                 break;
               default:
@@ -424,7 +428,7 @@ function NestedChecklistItem({
                              }: {
   part: PartWithCheckState;
   onToggle: (id: string) => void; 
-  onQualityChange: (id: string, quality: 'As new' | 'A' | 'B' | 'C' | '') => void;
+  onQualityChange: (id: string, quality: 'As new' | 'A' | 'B' | 'C' | 'Unsalvageable' | '') => void;
   onImageClick: (imageSrc: string, imageAlt: string) => void;
   level: number; 
 }) {
@@ -541,6 +545,16 @@ function NestedChecklistItem({
               }`}
             >
               Grade C
+            </button>
+            <button
+              onClick={() => onQualityChange(part.id, part.quality === 'Unsalvageable' ? '' : 'Unsalvageable')}
+              className={`px-2 py-1 text-xs rounded border transition-colors ${
+                part.quality === 'Unsalvageable'
+                  ? 'bg-gray-800 text-white border-gray-800'
+                  : 'bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200'
+              }`}
+            >
+              Unsalvageable
             </button>
           </div>
         )}
