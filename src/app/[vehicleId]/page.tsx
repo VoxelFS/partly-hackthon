@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 
 interface Part {
   name: string;
@@ -32,6 +33,7 @@ const addIdsAndCheckState = (parts: Part[], parentId = ''): PartWithCheckState[]
 export default function NestedChecklistPage() {
   const [parts, setParts] = useState<PartWithCheckState[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedImage, setSelectedImage] = useState<{src: string, alt: string} | null>(null);
 
   useEffect(() => {
     const loadData = async () => {
@@ -129,6 +131,16 @@ export default function NestedChecklistPage() {
   const totalItems = countTotalItems(parts);
   const checkedItems = countCheckedItems(parts);
 
+  // Function to open image modal
+  const openImageModal = (imageSrc: string, imageAlt: string) => {
+    setSelectedImage({ src: imageSrc, alt: imageAlt });
+  };
+
+  // Function to close image modal
+  const closeImageModal = () => {
+    setSelectedImage(null);
+  };
+
   return (
     <div className="bg-gray-50 p-4 sm:p-6 lg:p-8 min-h-screen">
       <div className="mx-auto max-w-4xl">
@@ -170,12 +182,38 @@ export default function NestedChecklistPage() {
                   part={part}
                   onToggle={handleToggle}
                   onQualityChange={handleQualityChange}
+                  onImageClick={openImageModal}
                   level={0}
                 />
               ))}
             </div>
           )}
         </div>
+
+        {/* Image Modal */}
+        {selectedImage && (
+          <div 
+            className="z-50 fixed inset-0 flex justify-center items-center bg-black bg-opacity-75 p-4"
+            onClick={closeImageModal}
+          >
+            <div className="relative max-w-full max-h-full">
+              <button
+                onClick={closeImageModal}
+                className="top-4 right-4 z-10 absolute flex justify-center items-center bg-black bg-opacity-50 hover:bg-opacity-75 rounded-full w-8 h-8 text-white transition-colors"
+              >
+                ×
+              </button>
+              <Image
+                src={selectedImage.src}
+                alt={selectedImage.alt}
+                width={800}
+                height={600}
+                className="rounded-lg max-w-full max-h-[90vh] object-contain"
+                onClick={(e) => e.stopPropagation()}
+              />
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -186,11 +224,13 @@ function NestedChecklistItem({
   part, 
   onToggle, 
   onQualityChange,
+  onImageClick,
   level 
 }: { 
   part: PartWithCheckState; 
   onToggle: (id: string) => void; 
   onQualityChange: (id: string, quality: 'As new' | 'A' | 'B' | 'C' | '') => void;
+  onImageClick: (imageSrc: string, imageAlt: string) => void;
   level: number; 
 }) {
   const [isExpanded, setIsExpanded] = useState(true);
@@ -228,6 +268,24 @@ function NestedChecklistItem({
           onChange={() => onToggle(part.id)}
           className="mr-3 border-gray-300 rounded focus:ring-green-500 w-4 h-4 text-green-600"
         />
+        
+        {/* Part Image */}
+        {part.image && (
+          <div className="group relative flex-shrink-0 mr-3">
+            <Image
+              src={`/${part.image}`}
+              alt={part.name}
+              width={32}
+              height={32}
+              className="hover:opacity-75 border border-gray-200 rounded object-cover transition-opacity cursor-pointer"
+              onClick={() => onImageClick(`/${part.image}`, part.name)}
+              onError={(e) => {
+                // Hide image if it fails to load
+                e.currentTarget.style.display = 'none';
+              }}
+            />
+          </div>
+        )}
         
         {/* Part Name */}
         <label
@@ -295,6 +353,7 @@ function NestedChecklistItem({
               part={childPart}
               onToggle={onToggle}
               onQualityChange={onQualityChange}
+              onImageClick={onImageClick}
               level={level + 1}
             />
           ))}

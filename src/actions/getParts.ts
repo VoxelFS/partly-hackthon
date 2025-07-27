@@ -1,6 +1,6 @@
 'use server';
 
-import data from '../../public/data.json';
+import data from '../../public/cleaned_data.json';
 
 export async function getParts(vehicleId: string) {
     // Check if we're using hardcoded data by checking an environment variable. If does not exist, use hardcoded data.
