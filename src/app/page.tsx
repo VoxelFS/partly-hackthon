@@ -2,6 +2,15 @@ import Image from "next/image";
 import SearchBar from "@/app/components/search-bar";
 
 export default function Home() {
+import {getParts} from "@/actions/getParts";
+import {getVehicle} from "@/actions/getVehicle";
+
+export default async function Home() {
+  const data = await getVehicle("KNW86");
+  console.log(data);
+
+  const parts = await getParts(data.id);
+  console.log(parts);
   return (
     <div className="min-h-screen font-sans bg-gray-100 dark:bg-zinc-950 text-gray-800 dark:text-white flex flex-col items-center px-6 sm:px-12 py-12 gap-16">
       
