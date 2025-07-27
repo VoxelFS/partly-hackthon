@@ -59,61 +59,8 @@ export default function NestedChecklistPage() {
     loadData();
   }, []);
 
-  // Handle checkbox toggle
-  const handleToggle = (targetId: string) => {
-    const togglePartRecursively = (parts: PartWithCheckState[]): PartWithCheckState[] => {
-      return parts.map(part => {
-        if (part.id === targetId) {
-          const newCheckedState = !part.isChecked;
-          const updatedPart = {
-            ...part,
-            isChecked: newCheckedState,
-            quality: newCheckedState ? part.quality : undefined
-          };
-
-          // If this is a parent being unchecked, also uncheck children
-          if (!newCheckedState && part.parts.length > 0) {
-            updatedPart.parts = part.parts.map(child => ({
-              ...child,
-              isChecked: false,
-              quality: undefined,
-              parts: child.parts.map(grandChild => ({
-                ...grandChild,
-                isChecked: false,
-                quality: undefined
-              }))
-            }));
-          }
-
-          return updatedPart;
-        }
-
-        // If this is a parent node, check if all children have grades after the update
-        if (part.parts.length > 0) {
-          const updatedChildren = togglePartRecursively(part.parts);
-          const allChildrenHaveGrades = updatedChildren.every(child => 
-            // For leaf nodes, check if they have a quality grade
-            (child.parts.length === 0 && child.quality) ||
-            // For parent nodes, check if they're checked (meaning all their children have grades)
-            (child.parts.length > 0 && child.isChecked)
-          );
-
-          return {
-            ...part,
-            parts: updatedChildren,
-            isChecked: allChildrenHaveGrades
-          };
-        }
-
-        return {
-          ...part,
-          parts: togglePartRecursively(part.parts)
-        };
-      });
-    };
-
-    setParts(prevParts => togglePartRecursively(prevParts));
-  };
+  // Handle checkbox state (now only updated through quality changes)
+  const handleToggle = () => {};
 
   // Handle quality selection
   const handleQualityChange = (targetId: string, quality: 'As new' | 'A' | 'B' | 'C' | '') => {
@@ -364,13 +311,18 @@ function NestedChecklistItem({
         {/* Spacer for items without children */}
         {!hasChildren && <div className="w-6" />}
         
-        {/* Checkbox */}
+        {/* Checkbox (read-only indicator) */}
         <input
           type="checkbox"
           id={part.id}
           checked={part.isChecked}
-          onChange={() => onToggle(part.id)}
-          className="mr-3 border-gray-300 rounded focus:ring-green-500 w-4 h-4 text-green-600"
+          readOnly
+          disabled
+          className={`mr-3 border-gray-300 rounded w-4 h-4 cursor-not-allowed ${
+            hasChildren 
+              ? 'opacity-60 checked:bg-gray-400'
+              : 'checked:bg-green-600'
+          }`}
         />
         
         {/* Part Image */}
