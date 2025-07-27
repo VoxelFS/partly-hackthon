@@ -31,7 +31,7 @@ export default async function Home() {
           </h1>
           
           <p className="mx-auto mb-8 max-w-3xl text-blue-100 text-xl sm:text-2xl leading-relaxed">
-            AI-powered vehicle parts assessment and valuation platform. 
+            AI-powered vehicle parts assessment platform. 
             Instantly analyze vehicle conditions and generate professional salvage reports.
           </p>
 
@@ -86,7 +86,7 @@ export default async function Home() {
                 <span className="text-2xl">📊</span>
               </div>
               <h4 className="mb-3 font-semibold text-white text-xl">3. Get Report</h4>
-              <p className="text-blue-100">Receive detailed valuation reports with quality grades and pricing.</p>
+              <p className="text-blue-100">Receive detailed assessment reports with quality grades and condition analysis.</p>
             </div>
           </div>
         </div>
