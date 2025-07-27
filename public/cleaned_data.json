@@ -1,68 +1,52 @@
 [
   {
-    "name": "Engine Bay",
-    "image": "images/engine_bay.jpg",
+    "name": "Mid Cut",
+    "image": "images/mid_cut.jpg",
     "parts": [
       {
-        "name": "Engine",
-        "image": "images/engine.jpg",
+        "name": "Door Mirrors",
+        "image": "images/door_mirrors.jpg",
         "parts": [
           {
-            "name": "Cylinder Head",
-            "image": "images/cylinder_head.jpg",
+            "name": "Door Mirror, Left",
+            "image": "images/door_mirror_left.jpg",
             "parts": []
           },
           {
-            "name": "Crankshaft",
-            "image": "images/crankshaft.jpg",
+            "name": "Door Mirror, Right",
+            "image": "images/door_mirror_right.jpg",
             "parts": []
           }
         ]
       },
       {
-        "name": "Radiator",
-        "image": "images/radiator.jpg",
-        "parts": []
-      },
-      {
-        "name": "Battery",
-        "image": "images/battery.jpg",
-        "parts": []
-      }
-    ]
-  },
-  {
-    "name": "Interior",
-    "image": "images/interior.jpg",
-    "parts": [
-      {
-        "name": "Dashboard",
-        "image": "images/dashboard.jpg",
+        "name": "Front Doors",
+        "image": "images/front_doors.jpg",
         "parts": [
           {
-            "name": "Instrument Cluster",
-            "image": "images/instrument_cluster.jpg",
+            "name": "Door, Front Left",
+            "image": "images/door_front_left.jpg",
             "parts": []
           },
           {
-            "name": "Air Vents",
-            "image": "images/air_vents.jpg",
+            "name": "Door, Front Right",
+            "image": "images/door_front_right.jpg",
             "parts": []
           }
         ]
       },
       {
-        "name": "Seats",
-        "image": "images/seats.jpg",
+        "name": "Rear Doors",
+        "image": "images/rear_doors.jpg",
         "parts": [
           {
-            "name": "Seat Cushion",
-            "image": "images/seat_cushion.jpg",
+            "name": "Door, Rear Left",
+            "image": "images/door_rear_left.jpg",
             "parts": []
           },
           {
-            "name": "Headrest",
-            "image": "images/headrest.jpg",
+            "name": "Door, Rear Right",
+            "image": "images/door_rear_right.jpg",
             "parts": []
           }
         ]
@@ -70,42 +54,47 @@
     ]
   },
   {
-    "name": "Suspension",
-    "image": "images/suspension.jpg",
+    "name": "Front Cut",
+    "image": "images/front_cut.jpg",
     "parts": [
       {
-        "name": "Shock Absorber",
-        "image": "images/shock_absorber.jpg",
-        "parts": []
+        "name": "Headlights",
+        "image": "images/headlights.jpg",
+        "parts": [
+          {
+            "name": "Headlight, Left",
+            "image": "images/headlight_left.jpg",
+            "parts": []
+          },
+          {
+            "name": "Headlight, Right",
+            "image": "images/headlight_right.jpg",
+            "parts": []
+          }
+        ]
       },
-      {
-        "name": "Control Arm",
-        "image": "images/control_arm.jpg",
-        "parts": []
-      }
-    ]
-  },
-  {
-    "name": "Exterior",
-    "image": "images/exterior.jpg",
-    "parts": [
       {
         "name": "Front Bumper",
         "image": "images/front_bumper.jpg",
         "parts": []
       },
       {
-        "name": "Headlight Assembly",
-        "image": "images/headlight.jpg",
+        "name": "Hood",
+        "image": "images/hood.jpg",
+        "parts": []
+      },
+      {
+        "name": "Front Fenders",
+        "image": "images/front_fenders.jpg",
         "parts": [
           {
-            "name": "Bulb",
-            "image": "images/bulb.jpg",
+            "name": "Fender, Left",
+            "image": "images/fender_left.jpg",
             "parts": []
           },
           {
-            "name": "Lens Cover",
-            "image": "images/lens_cover.jpg",
+            "name": "Fender, Right",
+            "image": "images/fender_right.jpg",
             "parts": []
           }
         ]
