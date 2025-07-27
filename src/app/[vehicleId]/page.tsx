@@ -2,18 +2,12 @@
 
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
+import { generateWordDocument } from '@/utils/generateWordDoc';
 
 interface Part {
   name: string;
   image: string;
   parts: Part[];
-}
-
-interface PartWithCheckState extends Part {
-  id: string;
-  isChecked: boolean;
-  quality?: 'As new' | 'A' | 'B' | 'C';
-  parts: PartWithCheckState[];
 }
 
 // Recursively add IDs and checkbox state to parts
@@ -30,10 +24,20 @@ const addIdsAndCheckState = (parts: Part[], parentId = ''): PartWithCheckState[]
   });
 };
 
+export interface PartWithCheckState {
+  id: string;
+  name: string;
+  image: string;
+  isChecked: boolean;
+  quality?: 'As new' | 'A' | 'B' | 'C';
+  parts: PartWithCheckState[];
+}
+
 export default function NestedChecklistPage() {
   const [parts, setParts] = useState<PartWithCheckState[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedImage, setSelectedImage] = useState<{src: string, alt: string} | null>(null);
+  const [exporting, setExporting] = useState(false);
 
   useEffect(() => {
     const loadData = async () => {
@@ -61,13 +65,46 @@ export default function NestedChecklistPage() {
       return parts.map(part => {
         if (part.id === targetId) {
           const newCheckedState = !part.isChecked;
-          return {
+          const updatedPart = {
             ...part,
             isChecked: newCheckedState,
-            // Clear quality if unchecking
             quality: newCheckedState ? part.quality : undefined
           };
+
+          // If this is a parent being unchecked, also uncheck children
+          if (!newCheckedState && part.parts.length > 0) {
+            updatedPart.parts = part.parts.map(child => ({
+              ...child,
+              isChecked: false,
+              quality: undefined,
+              parts: child.parts.map(grandChild => ({
+                ...grandChild,
+                isChecked: false,
+                quality: undefined
+              }))
+            }));
+          }
+
+          return updatedPart;
         }
+
+        // If this is a parent node, check if all children have grades after the update
+        if (part.parts.length > 0) {
+          const updatedChildren = togglePartRecursively(part.parts);
+          const allChildrenHaveGrades = updatedChildren.every(child => 
+            // For leaf nodes, check if they have a quality grade
+            (child.parts.length === 0 && child.quality) ||
+            // For parent nodes, check if they're checked (meaning all their children have grades)
+            (child.parts.length > 0 && child.isChecked)
+          );
+
+          return {
+            ...part,
+            parts: updatedChildren,
+            isChecked: allChildrenHaveGrades
+          };
+        }
+
         return {
           ...part,
           parts: togglePartRecursively(part.parts)
@@ -80,19 +117,37 @@ export default function NestedChecklistPage() {
 
   // Handle quality selection
   const handleQualityChange = (targetId: string, quality: 'As new' | 'A' | 'B' | 'C' | '') => {
-    const updatePartRecursively = (parts: PartWithCheckState[]): PartWithCheckState[] => {
+    const updatePartRecursively = (parts: PartWithCheckState[], parentIds: string[] = []): PartWithCheckState[] => {
       return parts.map(part => {
         if (part.id === targetId) {
+          // Update the target part
           return {
             ...part,
             quality: quality === '' ? undefined : quality,
-            // Auto-check the part when quality is selected, uncheck when cleared
             isChecked: quality !== '' ? true : false
           };
         }
+
+        // If this is a parent node
+        if (part.parts.length > 0) {
+          const updatedChildren = updatePartRecursively(part.parts, [...parentIds, part.id]);
+          const allChildrenHaveGrades = updatedChildren.every(child => 
+            // For leaf nodes, check if they have a quality grade
+            (child.parts.length === 0 && child.quality) ||
+            // For parent nodes, check if they're checked (meaning all their children have grades)
+            (child.parts.length > 0 && child.isChecked)
+          );
+
+          return {
+            ...part,
+            parts: updatedChildren,
+            isChecked: allChildrenHaveGrades
+          };
+        }
+
         return {
           ...part,
-          parts: updatePartRecursively(part.parts)
+          parts: updatePartRecursively(part.parts, [...parentIds, part.id])
         };
       });
     };
@@ -141,6 +196,27 @@ export default function NestedChecklistPage() {
     setSelectedImage(null);
   };
 
+  // Function to handle document export
+  const handleExport = async () => {
+    try {
+      setExporting(true);
+      const blob = await generateWordDocument(parts);
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `parts-checklist-${new Date().toISOString().split('T')[0]}.docx`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Error generating document:', error);
+      alert('Failed to generate document');
+    } finally {
+      setExporting(false);
+    }
+  };
+
   return (
     <div className="bg-gray-50 p-4 sm:p-6 lg:p-8 min-h-screen">
       <div className="mx-auto max-w-4xl">
@@ -155,13 +231,41 @@ export default function NestedChecklistPage() {
           
           {/* Summary */}
           <div className="bg-gray-50 p-4 rounded-lg">
-            <div className="flex justify-between items-center text-sm">
-              <span className="text-gray-600">
-                Total Items: <span className="font-semibold">{totalItems}</span>
-              </span>
-              <span className="text-gray-600">
-                Checked: <span className="font-semibold text-green-600">{checkedItems}</span>
-              </span>
+            <div className="flex justify-between items-center">
+              <div className="flex items-center gap-4 text-sm">
+                <span className="text-gray-600">
+                  Total Items: <span className="font-semibold">{totalItems}</span>
+                </span>
+                <span className="text-gray-600">
+                  Checked: <span className="font-semibold text-green-600">{checkedItems}</span>
+                </span>
+              </div>
+              <button
+                onClick={handleExport}
+                disabled={exporting || parts.length === 0}
+                className={`inline-flex items-center px-4 py-2 rounded-md text-sm font-medium transition-colors
+                  ${exporting || parts.length === 0
+                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                    : 'bg-blue-600 text-white hover:bg-blue-700'
+                  }`}
+              >
+                {exporting ? (
+                  <>
+                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Exporting...
+                  </>
+                ) : (
+                  <>
+                    <svg className="-ml-1 mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    Export to Word
+                  </>
+                )}
+              </button>
             </div>
           </div>
         </div>
@@ -299,49 +403,51 @@ function NestedChecklistItem({
           {part.name}
         </label>
         
-        {/* Quality Selection Buttons */}
-        <div className="flex gap-1 mr-2">
-          <button
-            onClick={() => onQualityChange(part.id, part.quality === 'As new' ? '' : 'As new')}
-            className={`px-2 py-1 text-xs rounded border transition-colors ${
-              part.quality === 'As new'
-                ? 'bg-green-500 text-white border-green-500'
-                : 'bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200'
-            }`}
-          >
-            As New
-          </button>
-          <button
-            onClick={() => onQualityChange(part.id, part.quality === 'A' ? '' : 'A')}
-            className={`px-2 py-1 text-xs rounded border transition-colors ${
-              part.quality === 'A'
-                ? 'bg-blue-500 text-white border-blue-500'
-                : 'bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200'
-            }`}
-          >
-            Grade A
-          </button>
-          <button
-            onClick={() => onQualityChange(part.id, part.quality === 'B' ? '' : 'B')}
-            className={`px-2 py-1 text-xs rounded border transition-colors ${
-              part.quality === 'B'
-                ? 'bg-yellow-500 text-white border-yellow-500'
-                : 'bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200'
-            }`}
-          >
-            Grade B
-          </button>
-          <button
-            onClick={() => onQualityChange(part.id, part.quality === 'C' ? '' : 'C')}
-            className={`px-2 py-1 text-xs rounded border transition-colors ${
-              part.quality === 'C'
-                ? 'bg-red-500 text-white border-red-500'
-                : 'bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200'
-            }`}
-          >
-            Grade C
-          </button>
-        </div>
+        {/* Quality Selection Buttons - Only show for leaf nodes */}
+        {!hasChildren && (
+          <div className="flex gap-1 mr-2">
+            <button
+              onClick={() => onQualityChange(part.id, part.quality === 'As new' ? '' : 'As new')}
+              className={`px-2 py-1 text-xs rounded border transition-colors ${
+                part.quality === 'As new'
+                  ? 'bg-green-500 text-white border-green-500'
+                  : 'bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200'
+              }`}
+            >
+              As New
+            </button>
+            <button
+              onClick={() => onQualityChange(part.id, part.quality === 'A' ? '' : 'A')}
+              className={`px-2 py-1 text-xs rounded border transition-colors ${
+                part.quality === 'A'
+                  ? 'bg-blue-500 text-white border-blue-500'
+                  : 'bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200'
+              }`}
+            >
+              Grade A
+            </button>
+            <button
+              onClick={() => onQualityChange(part.id, part.quality === 'B' ? '' : 'B')}
+              className={`px-2 py-1 text-xs rounded border transition-colors ${
+                part.quality === 'B'
+                  ? 'bg-yellow-500 text-white border-yellow-500'
+                  : 'bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200'
+              }`}
+            >
+              Grade B
+            </button>
+            <button
+              onClick={() => onQualityChange(part.id, part.quality === 'C' ? '' : 'C')}
+              className={`px-2 py-1 text-xs rounded border transition-colors ${
+                part.quality === 'C'
+                  ? 'bg-red-500 text-white border-red-500'
+                  : 'bg-gray-100 text-gray-700 border-gray-300 hover:bg-gray-200'
+              }`}
+            >
+              Grade C
+            </button>
+          </div>
+        )}
       </div>
       
       {/* Nested Children */}
