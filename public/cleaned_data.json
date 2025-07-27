@@ -54,8 +54,51 @@
     ]
   },
   {
-    "name": "Roof Cut",
-    "image": "images/roof_cut.jpg",
-    "parts": []
+    "name": "Front Cut",
+    "image": "images/front_cut.jpg",
+    "parts": [
+      {
+        "name": "Headlights",
+        "image": "images/headlights.jpg",
+        "parts": [
+          {
+            "name": "Headlight, Left",
+            "image": "images/headlight_left.jpg",
+            "parts": []
+          },
+          {
+            "name": "Headlight, Right",
+            "image": "images/headlight_right.jpg",
+            "parts": []
+          }
+        ]
+      },
+      {
+        "name": "Front Bumper",
+        "image": "images/front_bumper.jpg",
+        "parts": []
+      },
+      {
+        "name": "Hood",
+        "image": "images/hood.jpg",
+        "parts": []
+      },
+      {
+        "name": "Front Fenders",
+        "image": "images/front_fenders.jpg",
+        "parts": [
+          {
+            "name": "Fender, Left",
+            "image": "images/fender_left.jpg",
+            "parts": []
+          },
+          {
+            "name": "Fender, Right",
+            "image": "images/fender_right.jpg",
+            "parts": []
+          }
+        ]
+      }
+    ]
   }
 ]
