@@ -320,19 +320,14 @@ export default function NestedChecklistPage() {
             </p>
 
             {/* Summary */}
-            <div className="bg-gray-50 p-4 rounded-lg">
-              <div className="flex justify-between items-center text-sm">
+            <div className="bg-gray-50 p-4 rounded-lg flex justify-between">
+              <div className="flex justify-between items-center text-sm gap-10">
                 <span className="text-gray-600">
                   Total Items: <span className="font-semibold">{totalItems}</span>
                 </span>
                 <span className="text-gray-600">
                   Checked: <span className="font-semibold text-green-600">{checkedItems}</span>
                 </span>
-                {qualityItems > 0 && (
-                  <span className="text-gray-600">
-                    Auto-filled: <span className="font-semibold text-blue-600">{qualityItems}</span>
-                  </span>
-                )}
               </div>
               <button
                 onClick={handleExport}
