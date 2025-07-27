@@ -326,8 +326,8 @@ export default function NestedChecklistPage() {
             </p>
 
             {/* Summary */}
-            <div className="bg-gray-50 p-4 rounded-lg flex justify-between">
-              <div className="flex justify-between items-center text-sm gap-10">
+            <div className="flex justify-between bg-gray-50 p-4 rounded-lg">
+              <div className="flex justify-between items-center gap-10 text-sm">
                 <span className="text-gray-600">
                   Total Items: <span className="font-semibold">{totalItems}</span>
                 </span>
