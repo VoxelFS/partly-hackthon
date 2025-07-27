@@ -9,6 +9,7 @@ interface Part {
   name: string;
   image: string;
   parts: Part[];
+  grade?: string | null;  // Add grade field for analysis data
 }
 
 // Recursively add IDs and checkbox state to parts
@@ -40,7 +41,7 @@ export default function NestedChecklistPage() {
   const [selectedImage, setSelectedImage] = useState<{src: string, alt: string} | null>(null);
   const [exporting, setExporting] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
-  const [analysis, setAnalysis] = useState<string | null>(null);
+  const [analysis, setAnalysis] = useState<Part[] | null>(null);
 
   useEffect(() => {
     const loadData = async () => {
@@ -62,8 +63,12 @@ export default function NestedChecklistPage() {
     loadData();
   }, []);
 
-  // Handle checkbox state (now only updated through quality changes)
-  const handleToggle = () => {};
+  // Auto-apply analysis when analysis data changes
+  useEffect(() => {
+    if (analysis) {
+      applyAnalysisData(analysis);
+    }
+  }, [analysis]);
 
   // Handle quality selection
   const handleQualityChange = (targetId: string, quality: 'As new' | 'A' | 'B' | 'C' | '') => {
@@ -122,6 +127,15 @@ export default function NestedChecklistPage() {
     }, 0);
   };
 
+  // Count items with quality grades (auto-populated)
+  const countItemsWithQuality = (parts: PartWithCheckState[]): number => {
+    return parts.reduce((count, part) => {
+      const currentCount = part.quality ? 1 : 0;
+      const childCount = countItemsWithQuality(part.parts);
+      return count + currentCount + childCount;
+    }, 0);
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-screen">
@@ -135,6 +149,7 @@ export default function NestedChecklistPage() {
 
   const totalItems = countTotalItems(parts);
   const checkedItems = countCheckedItems(parts);
+  const qualityItems = countItemsWithQuality(parts);
 
   // Function to open image modal
   const openImageModal = (imageSrc: string, imageAlt: string) => {
@@ -144,6 +159,99 @@ export default function NestedChecklistPage() {
   // Function to close image modal
   const closeImageModal = () => {
     setSelectedImage(null);
+  };
+
+  const handleToggle = (targetId: string) => {
+    const togglePartRecursively = (parts: PartWithCheckState[]): PartWithCheckState[] => {
+      return parts.map(part => {
+        if (part.id === targetId) {
+          const newCheckedState = !part.isChecked;
+          return {
+            ...part,
+            isChecked: newCheckedState,
+            // Clear quality if unchecking
+            quality: newCheckedState ? part.quality : undefined
+          };
+        }
+        return {
+          ...part,
+          parts: togglePartRecursively(part.parts)
+        };
+      });
+    };
+
+    setParts(prevParts => togglePartRecursively(prevParts));
+  };
+
+  // Function to apply analysis data to parts
+  const applyAnalysisData = (analysisData: Part[]) => {
+    const applyGradesToParts = (parts: PartWithCheckState[], analysisPartsList: Part[]): PartWithCheckState[] => {
+      return parts.map(part => {
+        // Find matching part in analysis data by name
+        const analysisPart = analysisPartsList.find(ap => ap.name === part.name);
+        
+        if (analysisPart) {
+          // Map grade to quality and set checked state
+          let quality: 'As new' | 'A' | 'B' | 'C' | undefined;
+          let isChecked = false;
+          
+          if (analysisPart.grade) {
+            switch (analysisPart.grade) {
+              case 'As new':
+                quality = 'As new';
+                isChecked = true;
+                break;
+              case 'A':
+                quality = 'A';
+                isChecked = true;
+                break;
+              case 'B':
+                quality = 'B';
+                isChecked = true;
+                break;
+              case 'C':
+                quality = 'C';
+                isChecked = true;
+                break;
+              default:
+                quality = undefined;
+                isChecked = false;
+            }
+          }
+          
+          return {
+            ...part,
+            quality,
+            isChecked,
+            // Recursively apply to child parts
+            parts: applyGradesToParts(part.parts, analysisPart.parts || [])
+          };
+        }
+        
+        // If no matching analysis part, recursively check children
+        return {
+          ...part,
+          parts: applyGradesToParts(part.parts, analysisPartsList)
+        };
+      });
+    };
+
+    setParts(prevParts => applyGradesToParts(prevParts, analysisData));
+  };
+
+  // Function to reset all selections
+  const resetSelections = () => {
+    const resetPartsRecursively = (parts: PartWithCheckState[]): PartWithCheckState[] => {
+      return parts.map(part => ({
+        ...part,
+        isChecked: false,
+        quality: undefined,
+        parts: resetPartsRecursively(part.parts)
+      }));
+    };
+    
+    setParts(prevParts => resetPartsRecursively(prevParts));
+    setAnalysis(null);
   };
 
   // Function to handle document export
@@ -169,13 +277,38 @@ export default function NestedChecklistPage() {
 
   return (
       <div className="bg-gray-50 p-4 sm:p-6 lg:p-8 min-h-screen">
-        <UploadModal isOpen={modalOpen} onClose={() => setModalOpen(false)} setAnalysis={setAnalysis} />
+        <UploadModal 
+          isOpen={modalOpen} 
+          onClose={() => setModalOpen(false)} 
+          setAnalysis={setAnalysis} 
+        />
         <button
             onClick={() => setModalOpen(true)}
-            className="px-4 py-2 bg-blue-700 text-white rounded hover:cursor-pointer absolute right-3"
+            className="top-3 right-3 absolute bg-blue-700 px-4 py-2 rounded text-white hover:cursor-pointer"
         >
           Upload Image
         </button>
+        
+        {/* Analysis Status and Reset */}
+        {analysis && (
+          <div className="top-16 right-3 absolute bg-green-100 px-3 py-2 border border-green-400 rounded text-green-700 text-sm">
+            <div className="flex items-center gap-2">
+              <span>✓ Analysis Available</span>
+              <button
+                onClick={() => applyAnalysisData(analysis)}
+                className="bg-blue-500 hover:bg-blue-600 px-2 py-1 rounded text-white text-xs"
+              >
+                Re-apply
+              </button>
+              <button
+                onClick={resetSelections}
+                className="bg-red-500 hover:bg-red-600 px-2 py-1 rounded text-white text-xs"
+              >
+                Reset
+              </button>
+            </div>
+          </div>
+        )}
         <div className="mx-auto max-w-4xl">
           {/* Header */}
           <div className="bg-white shadow-md mb-6 p-6 rounded-lg">
@@ -189,12 +322,17 @@ export default function NestedChecklistPage() {
             {/* Summary */}
             <div className="bg-gray-50 p-4 rounded-lg">
               <div className="flex justify-between items-center text-sm">
-              <span className="text-gray-600">
-                Total Items: <span className="font-semibold">{totalItems}</span>
-              </span>
                 <span className="text-gray-600">
-                Checked: <span className="font-semibold text-green-600">{checkedItems}</span>
-              </span>
+                  Total Items: <span className="font-semibold">{totalItems}</span>
+                </span>
+                <span className="text-gray-600">
+                  Checked: <span className="font-semibold text-green-600">{checkedItems}</span>
+                </span>
+                {qualityItems > 0 && (
+                  <span className="text-gray-600">
+                    Auto-filled: <span className="font-semibold text-blue-600">{qualityItems}</span>
+                  </span>
+                )}
               </div>
               <button
                 onClick={handleExport}
@@ -207,7 +345,7 @@ export default function NestedChecklistPage() {
               >
                 {exporting ? (
                   <>
-                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <svg className="mr-2 -ml-1 w-4 h-4 text-white animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
@@ -215,7 +353,7 @@ export default function NestedChecklistPage() {
                   </>
                 ) : (
                   <>
-                    <svg className="-ml-1 mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="mr-2 -ml-1 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                     </svg>
                     Export to Word
