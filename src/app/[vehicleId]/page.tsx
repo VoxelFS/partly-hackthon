@@ -43,6 +43,8 @@ export default function NestedChecklistPage() {
   const [modalOpen, setModalOpen] = useState(false);
   const [analysis, setAnalysis] = useState<Part[] | null>(null);
 
+  const vehicleId = typeof window !== 'undefined' ? window.location.pathname.split('/')[1] : '';
+
   useEffect(() => {
     const loadData = async () => {
       try {
@@ -258,7 +260,7 @@ export default function NestedChecklistPage() {
   const handleExport = async () => {
     try {
       setExporting(true);
-      const blob = await generateWordDocument(parts);
+      const blob = await generateWordDocument(parts, vehicleId);
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
