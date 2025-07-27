@@ -56,7 +56,7 @@ export default function UploadModal({ isOpen, onClose, setAnalysis }: UploadModa
     };
 
     return (
-        <div className="z-50 fixed inset-0 flex justify-center items-center bg-black bg-opacity-50 backdrop-blur-sm p-4">
+        <div className="z-50 fixed inset-0 flex justify-center items-center bg-gray-900/25 backdrop-blur-sm p-4">
             <div className="relative bg-white shadow-2xl p-8 border border-gray-200 rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-auto">
                 <button
                     className="top-4 right-4 absolute flex justify-center items-center bg-gray-100 hover:bg-gray-200 rounded-full w-8 h-8 text-gray-500 hover:text-gray-700 transition-colors"
@@ -86,7 +86,7 @@ export default function UploadModal({ isOpen, onClose, setAnalysis }: UploadModa
                                 className="block hover:file:bg-blue-100 file:bg-blue-50 file:mr-4 file:px-4 file:py-2 border-gray-300 file:border-0 focus:border-blue-500 rounded-lg file:rounded-lg focus:ring-blue-500 w-full file:font-medium file:text-blue-700 text-sm file:text-sm transition-colors"
                             />
                         </div>
-                        <p className="text-gray-500 text-xs">Supported formats: JPG, PNG, WebP (Max 10MB)</p>
+                        <p className="text-gray-500 text-xs">Supported formats: JPG</p>
                     </div>
 
                     <button
