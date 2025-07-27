@@ -1,7 +1,7 @@
 import {createPartFromUri, createUserContent, GoogleGenAI} from "@google/genai";
 
 const prompt =`
-Describe whether or not parts of the car are damaged. The left and right directions should as if someone was sitting in the car. Rate each part as "As new", A, B, C, and "Unsalvageable". Use the provided JSON of car parts below. Return the exact same JSON with the field name "grade" corresponding to the part rating. If the part is not in the image, or the part is not clear, set the grade as null.
+Describe whether or not parts of the car are damaged, being very harsh. The left and right directions should be from the point of view of someone sitting in the car. Rate each part as "As new", A, B, C, and "Unsalvageable". Use the provided JSON of car parts below. Return the exact same JSON with the field name "grade" corresponding to the part rating. If the part is not in the image, or the part is not clearly visible, set the grade as null.
 
 Part JSON:
 [
