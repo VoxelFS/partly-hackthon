@@ -1,7 +1,5 @@
 import Image from "next/image";
 import SearchBar from "@/app/components/search-bar";
-
-export default function Home() {
 import {getParts} from "@/actions/getParts";
 import {getVehicle} from "@/actions/getVehicle";
 
