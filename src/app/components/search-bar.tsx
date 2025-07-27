@@ -1,3 +1,4 @@
+// SearchBar.tsx (with gradient background and Partly-inspired light indigo theme)
 "use client";
 
 import { useState } from "react";
@@ -16,6 +17,7 @@ export default function SearchBar() {
   const [showCard, setShowCard] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [shake, setShake] = useState(false);
 
   const allowedKeys: Record<string, string> = {
     make: "Make",
@@ -30,12 +32,14 @@ export default function SearchBar() {
     const cleaned = input.trim().toUpperCase();
     if (!cleaned) {
       setError("Please enter a license plate.");
+      triggerShake();
       return;
     }
 
     const isValidPlate = /^[A-Z0-9]{1,6}$/.test(cleaned);
     if (!isValidPlate) {
-      setError("Invalid plate format. Use letters/numbers only (max 6 characters).");
+      setError("Invalid format. Use letters/numbers only (max 6 chars).");
+      triggerShake();
       return;
     }
 
@@ -65,6 +69,7 @@ export default function SearchBar() {
 
       if (formatted.length === 0) {
         setError("No relevant vehicle details found.");
+        triggerShake();
         return;
       }
 
@@ -73,73 +78,75 @@ export default function SearchBar() {
     } catch (err) {
       setError("Vehicle lookup failed. Please try again.");
       console.error(err);
+      triggerShake();
     } finally {
       setLoading(false);
     }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") {
-      handleSearch();
-    }
+    if (e.key === "Enter") handleSearch();
+  };
+
+  const triggerShake = () => {
+    setShake(true);
+    setTimeout(() => setShake(false), 400);
   };
 
   return (
-    <div className="min-h-screen w-full flex flex-col items-center px-4 pt-10 pb-28 bg-gray-100 dark:bg-zinc-950 relative">
-      {/* Search Card */}
-      <div className="w-full max-w-2xl bg-white dark:bg-zinc-900 rounded-2xl shadow-lg p-10 mb-10 flex flex-col items-center text-center">
-        <h1 className="text-3xl font-bold mb-8 text-gray-800 dark:text-white">
-          Search vehicle by license plate
-        </h1>
+    <div className="w-full max-w-3xl flex flex-col items-center bg-gradient-to-br from-indigo-100 to-indigo-400 p-6 rounded-2xl shadow-lg">
+      <div className="bg-white shadow-md border border-indigo-200 rounded-2xl p-8 w-full">
+        <h2 className="text-3xl font-bold text-indigo-700 mb-6 text-center">
+          Search Vehicle by Plate
+        </h2>
 
-        <div className="w-full flex gap-4">
+        <motion.div
+          key={shake.toString()}
+          animate={shake ? { x: [0, -10, 10, -10, 10, 0] } : {}}
+          transition={{ duration: 0.4 }}
+          className="flex gap-4"
+        >
           <input
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value.toUpperCase())}
             onKeyDown={handleKeyDown}
-            placeholder="Enter Number Plate..."
-            className="flex-1 rounded-lg border border-gray-300 px-5 py-3 text-base focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-zinc-800 dark:text-white dark:border-gray-600"
+            placeholder="Enter License Plate..."
+            className="flex-1 px-5 py-3 text-base rounded-xl border border-indigo-300 focus:ring-2 focus:ring-indigo-400 focus:outline-none text-indigo-900 placeholder-indigo-300"
           />
           <button
             onClick={handleSearch}
-            className="px-6 py-3 text-base font-semibold bg-blue-600 text-white rounded-lg transition duration-150 ease-in-out hover:bg-blue-700 hover:shadow-md hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-blue-500"
+            disabled={loading}
+            className="bg-indigo-500 hover:bg-indigo-600 text-white px-5 py-3 text-base rounded-xl transition-all disabled:opacity-50"
           >
-            Enter
+            {loading ? "Searching..." : "Search"}
           </button>
-        </div>
+        </motion.div>
 
-        {loading && <p className="text-base text-gray-500 mt-4">Loading...</p>}
-        {error && <p className="text-base text-red-500 mt-4">{error}</p>}
+        {error && (
+          <p className="mt-5 text-sm text-red-500 text-center font-medium">{error}</p>
+        )}
       </div>
 
-      {/* Results Card */}
       {showCard && results.length > 0 && (
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4 }}
-          className="w-full max-w-2xl"
+          transition={{ duration: 0.3 }}
+          className="w-full mt-8"
         >
-          <div className="bg-white dark:bg-zinc-900 border border-gray-300 dark:border-gray-700 rounded-2xl shadow-md px-8 py-6 space-y-4">
-            <h2 className="text-xl font-semibold text-gray-800 dark:text-white">
-              Vehicle Details
-            </h2>
+          <div className="bg-indigo-50 border border-indigo-200 rounded-2xl shadow-md px-6 py-6 pb-2">
+            <h3 className="text-xl font-bold text-indigo-700 mb-4">
+              Vehicle Details for {input}
+            </h3>
             {results.map((item, index) => (
-              <p
-                key={index}
-                className="text-base text-gray-800 dark:text-gray-200"
-              >
-                <span className="font-semibold">{item.key}:</span> {item.value}
+              <p key={index} className="text-indigo-800 text-base">
+                <strong>{item.key}:</strong> {item.value}
               </p>
             ))}
-
-            {/* Checklist Button Inside Card */}
-            <div className="flex justify-end pt-4">
+            <div className="flex justify-end pt-5">
               <Link href={`/${input}`} passHref>
-                <button
-                  className="bg-white text-sm text-gray-800 font-medium border border-gray-300 rounded-lg px-4 py-2 shadow-sm transition duration-150 ease-in-out hover:bg-gray-100 hover:shadow-md hover:scale-[1.02] dark:bg-white dark:text-black"
-                >
+                <button className="text-sm bg-indigo-500 text-white px-4 py-2 rounded-lg hover:bg-indigo-600">
                   Go to Checklist
                 </button>
               </Link>
